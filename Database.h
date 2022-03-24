@@ -7,9 +7,8 @@
 class Database
 {
 private:
-    map<string, Relation> dataMap;
-
 public:
+    map<string, Relation> dataMap;
     string toString()
     {
         stringstream out;
@@ -41,6 +40,19 @@ public:
     unsigned int size()
     {
         return dataMap.size();
+    }
+
+    unsigned int returnRelationSize()
+    {
+        int totRelations = 0;
+        //   map<string, Relation>::iterator it;
+        // Iterate over idems in map, add numtuple for each
+        for (pair<string, Relation> relationEntry : dataMap)
+        {
+
+            totRelations++;
+        }
+        return totRelations;
     }
 
     unsigned int numTuples()

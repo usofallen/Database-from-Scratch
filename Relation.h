@@ -105,26 +105,24 @@ public:
 
     Relation project(vector<int> colsToKeep)
     {
-        Relation output; // not pass in something??
-        output.setName(name);
-
-        Scheme TempScheme;
-        for (unsigned int i = 0; i < colsToKeep.size(); i++)
-        {
-            TempScheme.pushBack(scheme.at(colsToKeep.at(i)));
-        }
-        output.setScheme(TempScheme);
-
-        for (auto tuple : tuples)
+        Relation NewRelation; // not pass in something??
+        NewRelation.setName(name);
+        for (auto i : tuples)
         {
             Tuple tempTuple;
             for (unsigned j = 0; j < colsToKeep.size(); j++)
             {
-                tempTuple.pushBack(tuple.at(colsToKeep.at(j)));
+                tempTuple.pushBack(i.at(colsToKeep.at(j)));
             }
-            output.addTuple(tempTuple);
+            NewRelation.addTuple(tempTuple);
         }
-        return output;
+        Scheme TempScheme;
+        for (unsigned int i = 0; i < colsToKeep.size(); i++)
+        {
+            TempScheme.pushBack(getScheme().at(colsToKeep.at(i)));
+        }
+        NewRelation.setScheme(TempScheme);
+        return NewRelation;
     }
 
     // Only updates scheme

@@ -105,24 +105,26 @@ public:
 
     Relation project(vector<int> colsToKeep)
     {
-        Relation NewRelation; // not pass in something??
-        NewRelation.setName(name);
-        for (auto i : tuples)
+        Relation output; // not pass in something??
+        output.setName(name);
+
+        Scheme TempScheme;
+        for (unsigned int i = 0; i < colsToKeep.size(); i++)
+        {
+            TempScheme.pushBack(scheme.at(colsToKeep.at(i)));
+        }
+        output.setScheme(TempScheme);
+
+        for (auto tuple : tuples)
         {
             Tuple tempTuple;
             for (unsigned j = 0; j < colsToKeep.size(); j++)
             {
-                tempTuple.pushBack(i.at(colsToKeep.at(j)));
+                tempTuple.pushBack(tuple.at(colsToKeep.at(j)));
             }
-            NewRelation.addTuple(tempTuple);
+            output.addTuple(tempTuple);
         }
-        Scheme TempScheme;
-        for (unsigned int i = 0; i < colsToKeep.size(); i++)
-        {
-            TempScheme.pushBack(getScheme().at(colsToKeep.at(i)));
-        }
-        NewRelation.setScheme(TempScheme);
-        return NewRelation;
+        return output;
     }
 
     // Only updates scheme
@@ -202,13 +204,20 @@ public:
     {
         // SUPPOSED TO BE VERY SIMILAR TO COMBOINE SCHEMES> in first walter video.
         Tuple output;
+        // start with left tuple, add unique columns of right tuple at end.
         for (unsigned int i = 0; i < t1.size(); i++)
         {
+            output.pushBack(t1.at(i));
+
             // output.at(i) = t1.at(i);
             // give all of tuple 1, only add a row of tuple 2 if it is not in tuple1
         }
+        for (unsigned int i = 0; i < uniqueColumns.size(); i++)
+        {
+            output.pushBack(t2.at(uniqueColumns.at(i)));
+        }
 
-        return Tuple();
+        return output;
     }
 
     bool canJoin(Tuple &t1, Tuple &t2, map<int, int> overlap)
@@ -223,8 +232,9 @@ public:
         return true;
     }
 
-    void unionize(Relation toAdd)
+    bool unionize(Relation toAdd)
     {
+        bool ifTrue = false;
         if (scheme.at(0) != toAdd.getScheme().at(0))
         {
             throw "Cannot combine b/c the schemes are different";
@@ -237,10 +247,11 @@ public:
                 {
                     cout << "  " << tuple.toString(scheme) << endl;
                 }
-
+                ifTrue = true;
                 // know which ones you added. to get the rows you got out, make a different function. Call remove on every old one.
             }
         }
+        return ifTrue;
     }
 
     //     // for the lab, check this out if i have questions but walters video is prolly best.

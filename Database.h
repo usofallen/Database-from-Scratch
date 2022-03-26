@@ -50,7 +50,7 @@ public:
         for (pair<string, Relation> relationEntry : dataMap)
         {
 
-            totRelations++;
+            totRelations = relationEntry.second.getTuples().size();
         }
         return totRelations;
     }

@@ -96,7 +96,30 @@ public:
         Relation currentRelation = database.getRelationCopy(predicate.getName());
         vector<int> newSchemePositions;
         vector<string> names;
+        for (unsigned int i = 0; i < predicate.getParameters().size(); i++)
+        {
+            Parameter swagParameter = predicate.getParameters().at(i);
 
+            if (swagParameter.at(0) == '\'')
+            {
+                currentRelation = currentRelation.select(i, swagParameter.getValue());
+            }
+
+            // it must be an ID
+            else
+            {
+                // FIX THIS
+                // bool duplicate = false;
+                for (unsigned int j = 0; j < predicate.getParameters().size(); j++)
+                {
+                    if (swagParameter.getValue() == predicate.getParameters().at(j).getValue())
+                    {
+                        // duplicate = true;
+                        currentRelation = currentRelation.select(i, j);
+                    }
+                }
+            }
+        }
         for (unsigned int i = 0; i < predicate.getParameters().size(); i++)
         {
             bool duplicate = false;
@@ -129,22 +152,21 @@ public:
 
     void evalRules()
     {
-        // unsigned int sizeBefore = 0;
-        // unsigned int sizeAfter = 0;
         int numPasses = 0;
         cout << "Rule Evaluation" << endl;
-        // do // PUT BACK IN THIS DO WHILE LOOP once you kNOW SINGLE PASS WORKS
-        // {
-        numPasses++;
-        // sizeBefore = database.size();
-        evalRuleListOnce(program.getRules());
-        // sizeAfter = database.returnRelationSize();
-        //  } while (sizeBefore != sizeAfter);
+        bool differentSizes = false;
+        do // PUT BACK IN THIS DO WHILE LOOP once you kNOW SINGLE PASS WORKS
+        {
+            numPasses++;
+            // sizeBefore = database.size();
+            differentSizes = evalRuleListOnce(program.getRules());
+            // sizeAfter = database.size();
+        } while (differentSizes);
         cout << endl;
         cout << "Schemes populated after " << numPasses << " passes through the Rules." << endl;
     }
 
-    void evalRuleListOnce(vector<Rule> rules)
+    bool evalRuleListOnce(vector<Rule> rules)
     {
 
         //     cout << "Rule Evaluation" << endl;
@@ -246,47 +268,70 @@ public:
         //     cout << "Schemes populated after " << rulesPass << " passes through the Rules." << endl;
         //     cout << endl;
         //     return;
+
+        bool found = false;
         for (Rule currRule : rules)
         {
-            for (Rule currRule : rules)
+            // for (Rule currRule : rules)
+            //{
+
+            cout << currRule.toString() << "." << endl;
+            vector<Relation> bodyRelations;
+            for (Predicate currPredicate : currRule.getBodyPredicates())
             {
-                cout << currRule.toString() << "." << endl;
-                vector<Relation> bodyRelations;
-                for (Predicate currPredicate : currRule.getBodyPredicates())
-                {
-                    Relation currRelation = evaluatePredicate(currPredicate); // fix evaluatePredicate, or figure out how to do it differently.
-                    bodyRelations.push_back(currRelation);
-                }
+                Relation currRelation = evaluatePredicate(currPredicate); // fix evaluatePredicate, or figure out how to do it differently.
+                bodyRelations.push_back(currRelation);
+            }
 
-                Relation resultRelation = bodyRelations.at(0);
-                for (unsigned int i = 1; i < bodyRelations.size(); i++) // starst at 1
-                {
-                    resultRelation = resultRelation.natJoin(resultRelation, bodyRelations.at(i));
-                }
+            Relation resultRelation = bodyRelations.at(0);
+            for (unsigned int i = 1; i < bodyRelations.size(); i++) // starst at 1
+            {
+                resultRelation = resultRelation.natJoin(resultRelation, bodyRelations.at(i));
+            }
 
-                vector<int> indicies; // check this code block for bugs
-                for (unsigned int i = 0; i < currRule.getHeadPredicate().getParameters().size(); i++)
+            // a nested for loop that goes through the parameters of the head predicate and checks if they are in the scheme of the result relation.
+            // if they are not, then the scheme is updated.
+            vector<int> indicies; // check this code block for bugs
+            for (unsigned int i = 0; i < currRule.getHeadPredicate().getParameters().size(); i++)
+            {
+                for (unsigned int j = 0; j < resultRelation.getScheme().size(); j++)
                 {
-                    for (unsigned int j = 0; j < resultRelation.getScheme().size(); j++)
+                    if (currRule.getHeadPredicate().getParameters().at(i).getValue() == resultRelation.getScheme().at(j))
                     {
-                        if (currRule.getHeadPredicate().getParameters().at(i).getValue() == resultRelation.getScheme().at(j)) //.getValue might be wrong
-                        {
-                            indicies.push_back(j);
-                        }
+                        indicies.push_back(j);
                     }
                 }
-
-                resultRelation = resultRelation.project(indicies);
-
-                // cn(c,n) :- snap+csg(S,n,A,P,c,G)
-                // Project({4,1})
-                // TODO figure out project ish here.
-                string name = currRule.getHeadPredicate().getName();
-                resultRelation = resultRelation.rename(database.getRelationByReference(name).getScheme());
-
-                database.getRelationByReference(name).unionize(resultRelation);
+                // if (!found)
+                // {
+                //     resultRelation.getScheme().pushBack(currRule.getHeadPredicate().getParameters().at(i).getValue());
+                // }
             }
+            resultRelation = resultRelation.project(indicies);
+
+            // vector<int> indicies; // check this code block for bugs
+            // for (unsigned int i = 0; i < currRule.getHeadPredicate().getParameters().size(); i++)
+            // {
+            //     for (unsigned int j = 0; j < resultRelation.getScheme().size(); j++)
+            //     {
+            //         if (currRule.getHeadPredicate().getParameters().at(i).getValue() == resultRelation.getScheme().at(j)) //.getValue might be wrong
+            //         {
+            //             indicies.push_back(j);
+            //         }
+            //     }
+            // }
+
+            // cn(c,n) :- snap+csg(S,n,A,P,c,G)
+            // Project({4,1})
+            // TODO figure out project ish here.
+            string name = currRule.getHeadPredicate().getName();
+            resultRelation = resultRelation.rename(database.getRelationByReference(name).getScheme());
+            if (database.getRelationByReference(name).unionize(resultRelation))
+            {
+                found = true;
+            }
+            //}
         }
+        return found;
     }
 
     // RUN AN IMPUT AND RUN YOUR DATABASE TOSTRING AND MAKE SURE WHAT GOT PRINTED OUT MATCHES WHAT YOU WERE EXPECTING.

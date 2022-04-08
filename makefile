@@ -1,14 +1,14 @@
 
-# makefile for project 3 pass-off tests
+# makefile for project 5 pass-off tests
 
-NUM:=3
+NUM:=5
 
 buckets:=20 40 60 80 100
-numbers_20:=21 22 24
-numbers_40:=41 42
-numbers_60:=61 62
-numbers_80:=81 82
-numbers_100:=101 102 104 105
+numbers_20:=21 22 23
+numbers_40:=41 42 43 44 45 46
+numbers_60:=61 62 64 66 67 68
+numbers_80:=81 82 83 84 85 86
+numbers_100:=101 102 103 104 105 108
 
 tests:=project$(NUM)-passoff
 

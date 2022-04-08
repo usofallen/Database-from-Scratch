@@ -175,25 +175,12 @@ public:
     string sccToString(vector<int> scc)
     {
         stringstream ss;
-        ss << "SCC: ";
         for (auto &nodeID : scc)
         {
             ss << "R" << nodeID << (nodeID == scc.back() ? "" : ",");
         }
         return ss.str();
     }
-
-    // void evaluateRulesForReal(vector<Rule> rules)
-    // {
-    //     int numPasses = 0;
-    //     cout << "Rule Evaluation" << endl;
-    //     bool differentSizes = false;
-    //     do
-    //     {
-    //         numPasses++;
-    //         differentSizes = evalRuleListOnce(program.getRules());
-    //     } while (differentSizes);
-    // }
 
     // a tostring function for getTopologicalSort
     string toString(vector<int> v)
@@ -206,58 +193,51 @@ public:
         return s;
     }
 
-    void evalRules(vector<int> topologicalSort, Graph graph)
-    {
-        vector<vector<int>> scc = getSCCs(graph);
-        for (unsigned int i = 0; i < scc.size(); i++)
-        {
-            evaluateSCCs(program.getRules(), scc.at(i));
-        }
-    }
-
-    void evaluateSCCs(vector<Rule> rules, vector<int> scc)
+    void evaluateSCC(vector<int> scc)
     {
 
-        int numPasses = 0;
-        // bool addTuples = false;
+        // int numPasses = 0;
+        //  bool addTuples = false;
         cout << sccToString(scc) << endl;
-
+        return;
         // for (unsigned int j = 0; j < scc.size(); j++)
         //{
 
-        numPasses++;
-        for (unsigned int i = 0; i < scc.size(); i++)
-        {
-            // int id = scc.at(i);
+        // numPasses++;
+        // for (unsigned int i = 0; i < scc.size(); i++)
+        // {
+        //     // int id = scc.at(i);
 
-            Rule rule = rules.at(i);
+        //     Rule rule = rules.at(i);
 
-            // cout << rule.toString() << "." << endl;
-            evalRuleListOnce(rules, scc);
+        //     // cout << rule.toString() << "." << endl;
+        //     evalRuleListOnce(rules, scc);
 
-            Scheme resultScheme = database.getRelationByReference(rule.getHeadPredicate().getName()).getScheme();
-        }
+        //     Scheme resultScheme = database.getRelationByReference(rule.getHeadPredicate().getName()).getScheme();
+        // }
 
-        cout << numPasses << " passes: ";
+        // cout << numPasses << " passes: ";
 
-        for (auto &nodeID : scc)
-        {
-            cout << "R" << nodeID;
-            cout << (nodeID == scc.back() ? "" : ",");
-        }
-        cout << endl;
+        // for (auto &nodeID : scc)
+        // {
+        //     cout << "R" << nodeID;
+        //     cout << (nodeID == scc.back() ? "" : ",");
+        // }
+        // cout << endl;
     }
 
-    set<Tuple> evalRuleListOnce(vector<Rule> rules, vector<int> sccs)
+    void evalRule(Rule currRule)
     {
-        set<Tuple> setOfTuples;
+        cout << currRule.toString() << endl;
+    }
 
-        // bool found = false;
+    bool evalRuleListOnce(vector<Rule> rules)
+    {
+        bool found = false;
         for (Rule currRule : rules)
         {
-            currRule.toString();
-            // cout << "SCC: R" << getTopologicalSort(makeGraph(rules).second << endl; //FIX HERE
-            //  cout << currRule.toString() << "." << endl;
+
+            cout << currRule.toString() << endl;
             vector<Relation> bodyRelations;
             for (Predicate currPredicate : currRule.getBodyPredicates())
             {
@@ -285,23 +265,16 @@ public:
                 }
             }
             resultRelation = resultRelation.project(indicies);
-
             string name = currRule.getHeadPredicate().getName();
-            cout << currRule.toString() << endl;
-
             resultRelation = resultRelation.rename(database.getRelationByReference(name).getScheme());
+
             if (database.getRelationByReference(name).unionize(resultRelation))
             {
-                continue;
+                found = true;
             }
-
-            // insert all tuples into the set
-            for (Tuple tuple : resultRelation.getTuples())
-            {
-                setOfTuples.insert(tuple);
-            }
+            //}
         }
-        return setOfTuples;
+        return found;
     }
 
     void depthFirstSearchForest(Graph &graph, stack<int> &nodeStack)
@@ -347,7 +320,7 @@ public:
     }
 
     // a function that reverses the odeder of the edges in the graph
-    void reverseGraph(Graph &graph)
+    Graph reverseGraph(Graph &graph)
     {
         for (auto &pair : graph.getNodes())
         {
@@ -360,12 +333,13 @@ public:
                 graph.addEdge(adjacentNodeID, nodeID);
             }
         }
+        return graph;
     }
 
     vector<int> getTopologicalSort(Graph graph)
     {
         // reverse the graph
-        // reverseGraph(graph);
+        // Graph reverseGraphSwag = reverseGraph(graph);
 
         stack<int> stack;
 
@@ -382,27 +356,26 @@ public:
         return topologicalSort;
     }
 
-    vector<vector<int>> getSCCs(Graph graph)
+    vector<vector<int>> getSCCs(Graph forward, Graph backward)
     {
         vector<vector<int>> sccs;
 
         // get topological sort
-        vector<int> topologicalSort = getTopologicalSort(graph);
+        vector<int> topologicalSort = getTopologicalSort(backward);
 
         // for each node in topological sort
         for (int nodeID : topologicalSort)
         {
             // if the node is not visited
-            if (!graph.getNode(nodeID).getVisited())
+            if (!forward.getNode(nodeID).getVisited())
             {
-                // create a new set
+                // create a new stack
                 stack<int> scc;
 
                 // call depth first search on the node
-                depthFirstSearch(graph, nodeID, scc);
+                depthFirstSearch(forward, nodeID, scc);
 
                 // make a set out of the scc
-
                 set<int> sccSet;
 
                 while (!scc.empty())

@@ -9,7 +9,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/lab5.exe",
-        "args": ["project5-passoff/input42.txt", ">actual.txt"],
+        "args": ["project5-passoff/input86.txt", ">actual.txt"],
         //"args": ["test.txt", ">actual.txt"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",

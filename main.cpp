@@ -14,8 +14,8 @@
 #include "Relation.h"
 #include "Database.h"
 #include "Interpreter.h"
-#include "Node.h"
-#include "Graph.h"
+#include "node.h"
+#include "graph.h"
 
 vector<string> flatten(vector<Parameter> vectorOfParameters)
 {
@@ -78,15 +78,51 @@ int main(int argc, char *argv[])
     // cout << graphs.second.toString() << endl;
     // cout << endl;
 
-    vector<int> topologicalSort = interpreter.getTopologicalSort(graphs.first);
+    // vector<int> topologicalSort = interpreter.getTopologicalSort(graphs.second);
 
-    vector<vector<int>> swag = interpreter.getSCCs(graphs.first);
-
+    // // for loop that prints out the topological sort
+    // cout << "Topological Sort" << endl;
+    // for (unsigned int i = 0; i < topologicalSort.size(); i++)
+    // {
+    //     cout << topologicalSort.at(i) << endl;
+    // }
     interpreter.evalSchemes();
     interpreter.evalFacts();
 
+    vector<vector<int>> SCCs = interpreter.getSCCs(graphs.first, graphs.second);
+    vector<Rule> rules = dp.getRules();
     cout << "Rule Evaluation" << endl;
-    interpreter.evalRules(topologicalSort, graphs.first);
+    bool differentSizes = false;
+
+    vector<int> theSCC;
+    for (unsigned int i = 0; i < SCCs.size(); i++)
+    {
+        theSCC = SCCs.at(i);
+        cout << "SCC: " << interpreter.sccToString(theSCC) << endl;
+
+        int numPasses = 0;
+
+        // bool addedTuples = false;
+        vector<Rule> vectorOfRules;
+
+        for (int i : theSCC)
+        {
+            vectorOfRules.push_back(rules.at(i));
+        }
+
+        do
+        {
+            numPasses++;
+            differentSizes = interpreter.evalRuleListOnce(vectorOfRules);
+
+        } while ((differentSizes && theSCC.size() > 1) || interpreter.ruleDependsOnSelf(graphs.first, theSCC.front()));
+        cout << numPasses << " passes: " << interpreter.sccToString(theSCC) << endl;
+    }
+
+    // vector<vector<int>> swag = interpreter.getSCCs(graphs.first);
+
+    // cout << "Rule Evaluation" << endl;
+    // interpreter.evalRules(topologicalSort, graphs.first);
     interpreter.evalQueries();
 
     return 0;

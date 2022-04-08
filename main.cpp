@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     // cout << graphs.second.toString() << endl;
     // cout << endl;
 
-    vector<int> topologicalSort = interpreter.getTopologicalSort(graphs.second);
+    vector<int> topologicalSort = interpreter.getTopologicalSort(graphs.first);
 
     vector<vector<int>> swag = interpreter.getSCCs(graphs.first);
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     interpreter.evalFacts();
 
     cout << "Rule Evaluation" << endl;
-    interpreter.evalRules(topologicalSort);
+    interpreter.evalRules(topologicalSort, graphs.first);
     interpreter.evalQueries();
 
     return 0;

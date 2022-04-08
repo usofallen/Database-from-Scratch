@@ -9,7 +9,6 @@ class Interpreter
 private:
     datalogProgram program;
     Database database;
-    int numTotalPasses = 0;
 
 public:
     Interpreter() {}
@@ -207,12 +206,16 @@ public:
         return s;
     }
 
-    void evalRules(vector<int> scc)
+    void evalRules(vector<int> topologicalSort, Graph graph)
     {
-        evaluateSCCs(program.getRules(), scc, makeGraph(program.getRules()).first);
+        vector<vector<int>> scc = getSCCs(graph);
+        for (unsigned int i = 0; i < scc.size(); i++)
+        {
+            evaluateSCCs(program.getRules(), scc.at(i));
+        }
     }
 
-    void evaluateSCCs(vector<Rule> rules, vector<int> scc, Graph graph)
+    void evaluateSCCs(vector<Rule> rules, vector<int> scc)
     {
 
         int numPasses = 0;
@@ -230,12 +233,12 @@ public:
             Rule rule = rules.at(i);
 
             // cout << rule.toString() << "." << endl;
-            evalRuleListOnce(rules);
+            evalRuleListOnce(rules, scc);
 
             Scheme resultScheme = database.getRelationByReference(rule.getHeadPredicate().getName()).getScheme();
         }
 
-        cout << numTotalPasses << " passes: ";
+        cout << numPasses << " passes: ";
 
         for (auto &nodeID : scc)
         {
@@ -245,7 +248,7 @@ public:
         cout << endl;
     }
 
-    set<Tuple> evalRuleListOnce(vector<Rule> rules)
+    set<Tuple> evalRuleListOnce(vector<Rule> rules, vector<int> sccs)
     {
         set<Tuple> setOfTuples;
 
@@ -298,7 +301,6 @@ public:
                 setOfTuples.insert(tuple);
             }
         }
-        numTotalPasses++;
         return setOfTuples;
     }
 

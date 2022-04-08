@@ -1,43 +1,272 @@
-Rule Evaluation
-c(z,w,x) :- a(w,x,'4',z).
-  x='1', y='3', z='2'
-  x='4', y='2', z='2'
-d(v,z,x) :- b(v,'2',x,'4',z).
-  x='1', y='5', z='3'
-  x='5', y='2', z='2'
-e(x,w,v,y) :- b(v,w,x,y,'2').
-  x='2', y='1', z='2', w='1'
-  x='2', y='2', z='5', w='4'
-f(x,y) :- b(x,y,x,y,x).
-  x='2', y='1'
-  x='3', y='4'
-c(z,w,x) :- a(w,x,'4',z).
-d(v,z,x) :- b(v,'2',x,'4',z).
-e(x,w,v,y) :- b(v,w,x,y,'2').
-f(x,y) :- b(x,y,x,y,x).
+Dependency Graph
+R0:R1,R2
+R1:R3,R4,R5,R6
+R2:R7,R8,R9,R10
+R3:R11
+R4:R12
+R5:R13
+R6:R14
+R7:R11
+R8:R12
+R9:R13
+R10:R14
+R11:
+R12:
+R13:
+R14:
 
-Schemes populated after 2 passes through the Rules.
+Rule Evaluation
+SCC: R14,R13,R12,R11,R10,R9,R8,R7,R6,R5,R4,R3,R2,R1,R0
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+  z='2'
+f(z) :- j(z).
+  z='2'
+g(z) :- j(z).
+  z='2'
+h(z) :- j(z).
+  z='2'
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+  z='2'
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+  z='2'
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+  y='2'
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+  x='2'
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+a(x) :- b(x).
+b(y) :- c(y).
+b(y) :- d(y).
+c(z) :- e(z).
+c(z) :- f(z).
+c(z) :- g(z).
+c(z) :- h(z).
+d(z) :- e(z).
+d(z) :- f(z).
+d(z) :- g(z).
+d(z) :- h(z).
+e(z) :- j(z).
+f(z) :- j(z).
+g(z) :- j(z).
+h(z) :- j(z).
+15 passes: R14,R13,R12,R11,R10,R9,R8,R7,R6,R5,R4,R3,R2,R1,R0
 
 Query Evaluation
-a(x,y,z,w)? Yes(4)
-  x='1', y='2', z='3', w='4'
-  x='2', y='2', z='4', w='4'
-  x='3', y='2', z='4', w='1'
-  x='4', y='2', z='3', w='2'
-b(x,y,z,w,v)? Yes(4)
-  x='1', y='2', z='3', w='4', v='5'
-  x='2', y='1', z='2', w='1', v='2'
-  x='3', y='4', z='3', w='4', v='3'
-  x='5', y='2', z='2', w='4', v='2'
-c(x,y,z)? Yes(2)
-  x='1', y='3', z='2'
-  x='4', y='2', z='2'
-d(x,y,z)? Yes(2)
-  x='1', y='5', z='3'
-  x='5', y='2', z='2'
-e(x,y,z,w)? Yes(2)
-  x='2', y='1', z='2', w='1'
-  x='2', y='2', z='5', w='4'
-f(x,y)? Yes(2)
-  x='2', y='1'
-  x='3', y='4'
+a(x)? Yes(1)
+  x='2'
+b(y)? Yes(1)
+  y='2'
+c(z)? Yes(1)
+  z='2'
+d(z)? Yes(1)
+  z='2'
+e(z)? Yes(1)
+  z='2'
+f(z)? Yes(1)
+  z='2'
+g(z)? Yes(1)
+  z='2'
+h(z)? Yes(1)
+  z='2'
+i(z)? No

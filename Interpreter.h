@@ -2,14 +2,17 @@
 #include "datalogProgram.h"
 #include "Database.h"
 #include "Relation.h"
+#include "graph.h"
 
 class Interpreter
 {
 private:
     datalogProgram program;
     Database database;
+    int numTotalPasses = 0;
 
 public:
+    Interpreter() {}
     Interpreter(datalogProgram program) : program(program)
     {
     }
@@ -24,14 +27,6 @@ public:
         return flattenedParameters;
     }
 
-    void run()
-    {
-        evalSchemes();
-        evalFacts();
-        // evalRules(); IGNORE FOR NOW. Project 4.
-        evalQueries();
-    }
-
     void evalSchemes()
     {
         for (auto &scheme : program.getSchemes())
@@ -39,14 +34,6 @@ public:
             Relation newRelation(scheme.getName(), flatten(scheme.getParameters()));
             database.insert(newRelation);
         }
-        // for each scheme s in program.schemes
-        //  make a new relation r
-        //  make a new scheme newScheme
-        //  set name of relation to name of s
-        //  for each paramater p in s
-        //   push_back p.tostring into newScheme
-        //   add newScheme into r
-        //  add r to our database
     }
 
     void evalFacts()
@@ -59,12 +46,6 @@ public:
             Tuple tSwag = Tuple(flatten(parameter));
             r.addTuple(tSwag);
         }
-        // for each fact f in program.facts
-        //  get relation r by reference from the database
-        //  make a new tuple newTuple
-        //  for each paramater p in f
-        //   push_back p.tostring into tuple newTuple
-        //   add newTuple into r
     }
     // MOVED TO DATABASE vvvvv
     void evalQueries()
@@ -150,132 +131,130 @@ public:
         return currentRelation;
     }
 
-    void evalRules()
+    pair<Graph, Graph> makeGraph(vector<Rule> rules) // clues at 13.00 of Walter's first video
     {
-        int numPasses = 0;
-        cout << "Rule Evaluation" << endl;
-        bool differentSizes = false;
-        do // PUT BACK IN THIS DO WHILE LOOP once you kNOW SINGLE PASS WORKS
+        Graph graph1(rules.size());
+        Graph graph2(rules.size());
+        for (unsigned int fromID = 0; fromID < rules.size(); fromID++)
         {
-            numPasses++;
-            // sizeBefore = database.size();
-            differentSizes = evalRuleListOnce(program.getRules());
-            // sizeAfter = database.size();
-        } while (differentSizes);
-        cout << endl;
-        cout << "Schemes populated after " << numPasses << " passes through the Rules." << endl;
+            Rule fromRule = rules.at(fromID);
+            vector<Predicate> predicates = fromRule.getBodyPredicates();
+            // cout << "from rule R" << fromID << ": " << fromRule.toString() << endl;
+            for (unsigned int predID = 0; predID < predicates.size(); predID++)
+            {
+                Predicate currPredicate = predicates.at(predID);
+                for (unsigned int toID = 0; toID < rules.size(); toID++)
+                {
+                    Rule toRule = rules.at(toID);
+                    if (toRule.getHeadPredicate().getName() == currPredicate.getName())
+                    {
+                        // cout << "to rule R" << toID << ": " << toRule.toString() << endl;
+                        graph1.addEdge(fromID, toID);
+                        graph2.addEdge(toID, fromID);
+                    }
+                }
+            }
+        }
+        return {graph1, graph2};
     }
 
-    bool evalRuleListOnce(vector<Rule> rules)
+    // TIPS: make the EvalRules only call one function, all that happens below should be in one function. That will make your life easier.
+
+    bool ruleDependsOnSelf(Graph graph, unsigned int index)
+    {
+        Node node = graph.getNode(index);
+        for (auto &adjacentNodeID : node.getAdjacentNodeIDs())
+        {
+            if (adjacentNodeID == index)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    // scc tostring
+    string sccToString(vector<int> scc)
+    {
+        stringstream ss;
+        ss << "SCC: ";
+        for (auto &nodeID : scc)
+        {
+            ss << "R" << nodeID << (nodeID == scc.back() ? "" : ",");
+        }
+        return ss.str();
+    }
+
+    // void evaluateRulesForReal(vector<Rule> rules)
+    // {
+    //     int numPasses = 0;
+    //     cout << "Rule Evaluation" << endl;
+    //     bool differentSizes = false;
+    //     do
+    //     {
+    //         numPasses++;
+    //         differentSizes = evalRuleListOnce(program.getRules());
+    //     } while (differentSizes);
+    // }
+
+    // a tostring function for getTopologicalSort
+    string toString(vector<int> v)
+    {
+        string s = "";
+        for (unsigned int i = 0; i < v.size(); i++)
+        {
+            s += to_string(v.at(i)) + " ";
+        }
+        return s;
+    }
+
+    void evalRules(vector<int> scc)
+    {
+        evaluateSCCs(program.getRules(), scc, makeGraph(program.getRules()).first);
+    }
+
+    void evaluateSCCs(vector<Rule> rules, vector<int> scc, Graph graph)
     {
 
-        //     cout << "Rule Evaluation" << endl;
-        //     bool moreTuples = true;
-        //     int rulesPass = 0;
-        //     while (moreTuples)
-        //     {
-        //         moreTuples = false;
-        //         vector<bool> shouldGoOn;
-        //         rulesPass++;
-        //         for (unsigned int i = 0; i < rules.size(); i++)
-        //         {
-        //             cout << rules.at(i).toString() << endl;
-        //             vector<Relation> theRelations;
-        //             for (unsigned int j = 0; j < rules.at(i).getBodyPredicates().size(); j++)
-        //             {
-        //                 Relation thisRelation = evaluatePredicate(rules.at(i).getBodyPredicates().at(j));
-        //                 theRelations.push_back(thisRelation);
-        //             }
+        int numPasses = 0;
+        // bool addTuples = false;
+        cout << sccToString(scc) << endl;
 
-        //             // Join
-        //             Relation thisRelation;
-        //             if (theRelations.size() > 1)
-        //             {
-        //                 thisRelation = theRelations.at(0);
-        //                 for (unsigned int j = 0; j < theRelations.size() - 1; j++)
-        //                 {
+        // for (unsigned int j = 0; j < scc.size(); j++)
+        //{
 
-        //                     thisRelation = thisRelation.natJoin(thisRelation, theRelations.at(j + 1));
-        //                 }
-        //             }
-        //             else
-        //             {
-        //                 thisRelation = theRelations.at(0);
-        //             }
-        //             // Project
-        //             // What the heck is going on???
-        //             vector<int> Indicies;
-        //             for (unsigned int j = 0; j < rules.at(i).getHeadPredicate().getParameters().size(); j++)
-        //             {
-        //                 // cout << Rules.at(i).Head.parameterList.at(j).ToString() << " | " << thisRelation.TheScheme.Fake();
-        //                 for (unsigned int k = 0; k < thisRelation.getScheme().size(); k++)
-        //                 {
-        //                     // cout << Rules.at(i).Head.parameterList.at(j).theParameter << "|" << thisRelation.TheScheme.At(k) << endl;
-        //                     if (rules.at(i).getHeadPredicate().getParameters().at(j).getValue() == thisRelation.getScheme().at(k))
-        //                     {
-        //                         Indicies.push_back(k);
-        //                         // cout << "got pushed back" << endl;
-        //                     }
-        //                 }
-        //             }
-        //             // cout << "indicies: " <<Indicies.size() << endl;
-        //             thisRelation = thisRelation.project(Indicies);
-        //             // Rename
-        //             Relation aRelation = thisRelation.setScheme(name);
-        //             aRelation = rules.at(i).getHeadPredicate().getName();
-        //             if (database.getRelationByReference(thisRelation.getName()).getScheme().size() == thisRelation.getScheme().size())
-        //             {
-        //                 thisRelation.getScheme() = (database.getRelationByReference(thisRelation.getName()).getScheme());
-        //             }
-        //             else
-        //             {
-        //                 // cout << "abort" << endl;
-        //             }
-        //             /*
-        //             cout << "Scheme end:" ;
-        //             for (unsigned int i = 0; i < theDatabase.databaseseses.at(thisRelation.name).TheScheme.values.size(); i++) {
-        //                 cout << theDatabase.databaseseses.at(thisRelation.name).TheScheme.values.at(i);
-        //             }
-        //             cout << endl;
-        //             thisRelation.Rename(theDatabase.databaseseses.at(thisRelation.name).TheScheme.values);
-        //             cout << "Scheme end:" ;
-        //             for (unsigned int i = 0; i < thisRelation.TheScheme.values.size(); i++) {
-        //                 cout << thisRelation.TheScheme.values.at(i);
-        //             }
-        //             */
-        //             // Union
-        //             shouldGoOn.push_back(database.getRelationByReference(thisRelation.getName()).canJoin(thisRelation.getTuples);
+        numPasses++;
+        for (unsigned int i = 0; i < scc.size(); i++)
+        {
+            // int id = scc.at(i);
 
-        //             // output
-        //             /*
-        //             if (theDatabase.databaseseses.at(thisRelation.name).DemTuples.size() == 0) {}
-        //             else {
-        //                 if (theDatabase.databaseseses.at(thisRelation.name).BeenOutPutted == false) {
-        //                     thisRelation.ToString();
-        //                 }
-        //             }
-        //             */
-        //         }
-        //         for (unsigned int a = 0; a < shouldGoOn.size(); a++)
-        //         {
-        //             if (shouldGoOn.at(a))
-        //             {
-        //                 moreTuples = true;
-        //             }
-        //         }
-        //     }
-        //     cout << endl;
-        //     cout << "Schemes populated after " << rulesPass << " passes through the Rules." << endl;
-        //     cout << endl;
-        //     return;
+            Rule rule = rules.at(i);
 
-        bool found = false;
+            // cout << rule.toString() << "." << endl;
+            evalRuleListOnce(rules);
+
+            Scheme resultScheme = database.getRelationByReference(rule.getHeadPredicate().getName()).getScheme();
+        }
+
+        cout << numTotalPasses << " passes: ";
+
+        for (auto &nodeID : scc)
+        {
+            cout << "R" << nodeID;
+            cout << (nodeID == scc.back() ? "" : ",");
+        }
+        cout << endl;
+    }
+
+    set<Tuple> evalRuleListOnce(vector<Rule> rules)
+    {
+        set<Tuple> setOfTuples;
+
+        // bool found = false;
         for (Rule currRule : rules)
         {
-            // for (Rule currRule : rules)
-            //{
-
-            cout << currRule.toString() << "." << endl;
+            currRule.toString();
+            // cout << "SCC: R" << getTopologicalSort(makeGraph(rules).second << endl; //FIX HERE
+            //  cout << currRule.toString() << "." << endl;
             vector<Relation> bodyRelations;
             for (Predicate currPredicate : currRule.getBodyPredicates())
             {
@@ -301,37 +280,145 @@ public:
                         indicies.push_back(j);
                     }
                 }
-                // if (!found)
-                // {
-                //     resultRelation.getScheme().pushBack(currRule.getHeadPredicate().getParameters().at(i).getValue());
-                // }
             }
             resultRelation = resultRelation.project(indicies);
 
-            // vector<int> indicies; // check this code block for bugs
-            // for (unsigned int i = 0; i < currRule.getHeadPredicate().getParameters().size(); i++)
-            // {
-            //     for (unsigned int j = 0; j < resultRelation.getScheme().size(); j++)
-            //     {
-            //         if (currRule.getHeadPredicate().getParameters().at(i).getValue() == resultRelation.getScheme().at(j)) //.getValue might be wrong
-            //         {
-            //             indicies.push_back(j);
-            //         }
-            //     }
-            // }
-
-            // cn(c,n) :- snap+csg(S,n,A,P,c,G)
-            // Project({4,1})
-            // TODO figure out project ish here.
             string name = currRule.getHeadPredicate().getName();
+            cout << currRule.toString() << endl;
+
             resultRelation = resultRelation.rename(database.getRelationByReference(name).getScheme());
             if (database.getRelationByReference(name).unionize(resultRelation))
             {
-                found = true;
+                continue;
             }
-            //}
+
+            // insert all tuples into the set
+            for (Tuple tuple : resultRelation.getTuples())
+            {
+                setOfTuples.insert(tuple);
+            }
         }
-        return found;
+        numTotalPasses++;
+        return setOfTuples;
+    }
+
+    void depthFirstSearchForest(Graph &graph, stack<int> &nodeStack)
+    {
+
+        // for each node
+        for (auto &pair : graph.getNodes())
+        {
+            int nodeID = pair.getNodeID();
+
+            // recursively call depthFirstSearch
+            depthFirstSearch(graph, nodeID, nodeStack);
+        }
+    }
+
+    static void depthFirstSearch(Graph &graph, int startNodeID, stack<int> &nodeStack)
+    {
+
+        if (graph.getNode(startNodeID).getVisited())
+        {
+            return;
+        }
+
+        // get the node by the id
+        Node &startNode = graph.getNode(startNodeID);
+
+        // mark the node as visited
+        startNode.setVisited(true);
+
+        // for each adjacent node
+        for (auto &adjacentNodeID : startNode.getAdjacentNodeIDs())
+        {
+            // if the adjacent node is not visited
+            if (!graph.getNode(adjacentNodeID).getVisited())
+            {
+                // recursively call depthFirstSearch
+                depthFirstSearch(graph, adjacentNodeID, nodeStack);
+            }
+        }
+
+        // push the node to the stack
+        nodeStack.push(startNodeID);
+    }
+
+    // a function that reverses the odeder of the edges in the graph
+    void reverseGraph(Graph &graph)
+    {
+        for (auto &pair : graph.getNodes())
+        {
+            int nodeID = pair.getNodeID();
+            Node &node = graph.getNode(nodeID);
+            set<unsigned int> adjacentNodeIDs = node.getAdjacentNodeIDs();
+            for (auto &adjacentNodeID : adjacentNodeIDs)
+            {
+                graph.removeEdge(nodeID, adjacentNodeID);
+                graph.addEdge(adjacentNodeID, nodeID);
+            }
+        }
+    }
+
+    vector<int> getTopologicalSort(Graph graph)
+    {
+        // reverse the graph
+        // reverseGraph(graph);
+
+        stack<int> stack;
+
+        vector<int> topologicalSort;
+
+        depthFirstSearchForest(graph, stack);
+
+        while (!stack.empty())
+        {
+            topologicalSort.push_back(stack.top());
+            stack.pop();
+        }
+
+        return topologicalSort;
+    }
+
+    vector<vector<int>> getSCCs(Graph graph)
+    {
+        vector<vector<int>> sccs;
+
+        // get topological sort
+        vector<int> topologicalSort = getTopologicalSort(graph);
+
+        // for each node in topological sort
+        for (int nodeID : topologicalSort)
+        {
+            // if the node is not visited
+            if (!graph.getNode(nodeID).getVisited())
+            {
+                // create a new set
+                stack<int> scc;
+
+                // call depth first search on the node
+                depthFirstSearch(graph, nodeID, scc);
+
+                // make a set out of the scc
+
+                set<int> sccSet;
+
+                while (!scc.empty())
+                {
+                    sccSet.insert(scc.top());
+                    scc.pop();
+                }
+
+                vector<int> sccList;
+                for (int i : sccSet)
+                {
+                    sccList.push_back(i);
+                }
+
+                sccs.push_back(sccList);
+            }
+        }
+        return sccs;
     }
 
     // RUN AN IMPUT AND RUN YOUR DATABASE TOSTRING AND MAKE SURE WHAT GOT PRINTED OUT MATCHES WHAT YOU WERE EXPECTING.

@@ -42,6 +42,8 @@
         "map": "cpp",
         "vector": "cpp",
         "set": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "stack": "cpp",
+        "deque": "cpp"
     }
 }

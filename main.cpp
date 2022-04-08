@@ -14,6 +14,8 @@
 #include "Relation.h"
 #include "Database.h"
 #include "Interpreter.h"
+#include "Node.h"
+#include "Graph.h"
 
 vector<string> flatten(vector<Parameter> vectorOfParameters)
 {
@@ -68,9 +70,23 @@ int main(int argc, char *argv[])
 
     Interpreter interpreter(dp);
 
+    pair<Graph, Graph> graphs = interpreter.makeGraph(dp.getRules());
+    cout << "Dependency Graph" << endl;
+    cout << graphs.first.toString() << endl
+         << endl;
+
+    // cout << graphs.second.toString() << endl;
+    // cout << endl;
+
+    vector<int> topologicalSort = interpreter.getTopologicalSort(graphs.second);
+
+    vector<vector<int>> swag = interpreter.getSCCs(graphs.first);
+
     interpreter.evalSchemes();
     interpreter.evalFacts();
-    interpreter.evalRules();
+
+    cout << "Rule Evaluation" << endl;
+    interpreter.evalRules(topologicalSort);
     interpreter.evalQueries();
 
     return 0;

@@ -39,6 +39,12 @@ public:
         bodyPredicates.push_back(value);
     }
 
+    // a function that returns a rules size
+    unsigned int size()
+    {
+        return bodyPredicates.size();
+    }
+
     string toString()
     {
         stringstream ss;
@@ -51,7 +57,7 @@ public:
                 ss << ",";
             }
         }
-        // ss << ".";
+        ss << ".";
         return ss.str();
     }
 };

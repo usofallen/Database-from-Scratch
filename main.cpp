@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
             numPasses++;
             differentSizes = interpreter.evalRuleListOnce(vectorOfRules);
 
-        } while ((differentSizes && theSCC.size() > 1) || interpreter.ruleDependsOnSelf(graphs.first, theSCC.front()));
+        } while (differentSizes && (theSCC.size() > 1 || interpreter.ruleDependsOnSelf(graphs.first, theSCC.front())));
         cout << numPasses << " passes: " << interpreter.sccToString(theSCC) << endl;
     }
 

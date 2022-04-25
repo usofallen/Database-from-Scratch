@@ -119,10 +119,6 @@ int main(int argc, char *argv[])
         cout << numPasses << " passes: " << interpreter.sccToString(theSCC) << endl;
     }
 
-    // vector<vector<int>> swag = interpreter.getSCCs(graphs.first);
-
-    // cout << "Rule Evaluation" << endl;
-    // interpreter.evalRules(topologicalSort, graphs.first);
     interpreter.evalQueries();
 
     return 0;

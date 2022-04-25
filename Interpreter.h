@@ -195,35 +195,8 @@ public:
 
     void evaluateSCC(vector<int> scc)
     {
-
-        // int numPasses = 0;
-        //  bool addTuples = false;
         cout << sccToString(scc) << endl;
         return;
-        // for (unsigned int j = 0; j < scc.size(); j++)
-        //{
-
-        // numPasses++;
-        // for (unsigned int i = 0; i < scc.size(); i++)
-        // {
-        //     // int id = scc.at(i);
-
-        //     Rule rule = rules.at(i);
-
-        //     // cout << rule.toString() << "." << endl;
-        //     evalRuleListOnce(rules, scc);
-
-        //     Scheme resultScheme = database.getRelationByReference(rule.getHeadPredicate().getName()).getScheme();
-        // }
-
-        // cout << numPasses << " passes: ";
-
-        // for (auto &nodeID : scc)
-        // {
-        //     cout << "R" << nodeID;
-        //     cout << (nodeID == scc.back() ? "" : ",");
-        // }
-        // cout << endl;
     }
 
     void evalRule(Rule currRule)
